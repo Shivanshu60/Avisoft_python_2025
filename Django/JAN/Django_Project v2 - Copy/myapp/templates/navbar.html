@@ -1,6 +1,6 @@
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary px-4">
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm px-4">
     <div class="container-fluid container">
-        <!-- Logo stays on the left, no change here -->
+        <!-- Logo stays on the left -->
         <a class="navbar-brand fs-3 fw-bold text-white pl-3" href="/home/">
             &ltP&gt TAG SCRAPPER
         </a>
@@ -10,24 +10,39 @@
             <span class="navbar-toggler-icon"></span>
         </button>
 
-        <!-- Navbar links: Align to the right and add space between them -->
+        <!-- Navbar links -->
         <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
+            <ul class="navbar-nav ms-auto align-items-center">
+                <!-- Common Links -->
                 <li class="nav-item">
-                    <a class="nav-link{% if request.path == '/home/' %} active{% endif %} fs-4 mx-3" href="/home/">Home</a>
+                    <a class="nav-link{% if request.path == '/home/' %} active{% endif %} fs-5 mx-2 text-white" href="/home/">Home</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link{% if request.path == '/downloads/' %} active{% endif %} fs-4 mx-3" href="/downloads/">Downloads</a>
+                    <a class="nav-link{% if request.path == '/downloads/' %} active{% endif %} fs-5 mx-2 text-white" href="/downloads/">Downloads</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link{% if request.path == '/about/' %} active{% endif %} fs-4 mx-3" href="/about/">About Me</a>
+                    <a class="nav-link{% if request.path == '/about/' %} active{% endif %} fs-5 mx-2 text-white" href="/about/">About Me</a>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link{% if request.path == '/auth/login/' %} active{% endif %} fs-4 mx-3" href="/auth/login/">Login</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link{% if request.path == '/auth/register/' %} active{% endif %} fs-4 mx-3" href="/auth/register/">Register</a>
-                </li>
+
+                <!-- Auth-Specific Links -->
+                {% if user.is_authenticated %}
+                    <li class="nav-item d-flex align-items-center">
+                        <!-- Welcome Message -->
+                        <span class="nav-link text-white fs-5 mx-2">
+                            <i class="bi bi-person-circle"></i> Welcome, <strong>{{ user.username }}</strong>
+                        </span>
+                    </li>
+                    <li class="nav-item">
+                        <a class="btn btn-light btn-sm fs-6 mx-2" href="/auth/logout/">Logout</a>
+                    </li>
+                {% else %}
+                    <li class="nav-item">
+                        <a class="btn btn-light btn-sm fs-6 mx-2" href="/auth/login/">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="btn btn-outline-light btn-sm fs-6 mx-2" href="/auth/register/">Register</a>
+                    </li>
+                {% endif %}
             </ul>
         </div>
     </div>
