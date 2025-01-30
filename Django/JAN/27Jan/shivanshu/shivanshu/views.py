@@ -1,14 +1,23 @@
 from django.http import HttpResponse
 from django.shortcuts import render
 from .forms import usersForm
+from service.models import Service
+
 
 
 
 def homePage(request):
+    servicesData = Service.objects.all().order_by('service_title')[:3] # u can use order by using <.order_by('attribute_name')>  and [:3] for limit
+    # use -attribute_name for reversinbg the order
+
+    # for a in servicesData:
+    #     print(a.service_icon)
+    #     print(a.service_title)
     data = {
         "title": 'Home Page',
         'bdata': 'ye views se aarha h',
         'clist': ['python', 'c++', 'c', 'Java'],
+        'servicesData': servicesData,
     }
 
     return render(request, "index.html", data)

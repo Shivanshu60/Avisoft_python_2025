@@ -6,9 +6,23 @@
 <h6>{{ title }}</h6>
 <h6>{{ bdata }}</h6>
 <h1>{{clist}}</h1>
+<hr>
+<marquee behavior="" direction=""> This is a home page</marquee>
+<hr>
 
 {% for n in clist %}
 <div> {{forloop.first}} {{ n }} </div>
+{% endfor %}
+
+{% for n in servicesData %}
+<hr>
+{{n.service_icon}}
+<br>
+{{n.service_title}}
+<br>
+{{n.service_des}}
+<hr>
+
 {% endfor %}
 
 <img src="static/img/pig.jpg" alt="Pig">
