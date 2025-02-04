@@ -7,7 +7,7 @@ router = APIRouter()
 @router.get("/home", response_class=HTMLResponse)
 async def home(request: Request):
     user_authenticated = "username" in request.session  
-    username = request.session.get("username", "Guest")  
+    username = request.session.get("username")  
 
     return templates.TemplateResponse("home.html", {
         "request": request,

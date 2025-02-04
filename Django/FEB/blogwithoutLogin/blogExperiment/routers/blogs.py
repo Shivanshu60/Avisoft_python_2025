@@ -3,7 +3,9 @@ from fastapi.responses import RedirectResponse, HTMLResponse
 from sqlmodel import select
 from core.database import SessionDep
 from models.blog import Blog
+from models.comment import Comment
 from core.config import templates
+
 
 router = APIRouter()
 
@@ -44,16 +46,75 @@ async def create_blog(request: Request, session: SessionDep, title: str = Form(.
 @router.get("/blogs/", response_class=HTMLResponse)
 async def read_blogs(request: Request, session: SessionDep, username: str | None = Depends(get_username)):
     user_authenticated = username is not None
-    blogs = session.exec(select(Blog)).all()
+    blog = session.exec(select(Blog)).all()
     return templates.TemplateResponse(
-        "blogs.html",
+        "allblogstitle.html",
         {
             "request": request,
-            "blogs": blogs,
+            "blog": blog,
             "user_authenticated": user_authenticated,
             "username": username
         }
     )
+
+@router.get("/blogs/{blog_id}", response_class=HTMLResponse)
+async def blog_detail(
+    request: Request,
+    blog_id: int,  # Accept blog_id as a path parameter
+    session: SessionDep,
+    username: str | None = Depends(get_username)
+):
+    user_authenticated = username is not None
+
+    # Query the database for the blog with the specified ID
+    blog = session.exec(select(Blog).where(Blog.id == blog_id)).first()
+
+    # If the blog is not found, raise a 404 error
+    if not blog:
+        raise HTTPException(status_code=404, detail="Blog not found")
+    
+    comments = session.exec(select(Comment).where(Comment.blog_id == blog_id)).all()
+
+    return templates.TemplateResponse(
+        "blogDetails.html",
+        {
+            "request": request,
+            "blog": blog,
+            "comments": comments,
+            "user_authenticated": user_authenticated,
+            "username": username
+        }
+    )
+
+
+
+
+@router.post("/blogs/{blog_id}/comment", response_class=HTMLResponse)
+async def add_comment(
+    request: Request,
+    blog_id: int,
+    session: SessionDep,
+    comment_content: str = Form(...),  # Retrieve the comment content from the form
+    username: str | None = Depends(get_username)
+):
+    # Ensure that the user is authenticated
+    if username is None:
+        raise HTTPException(status_code=401, detail="Authentication required to post comments")
+    
+    # Verify the blog exists
+    blog = session.exec(select(Blog).where(Blog.id == blog_id)).first()
+    if not blog:
+        raise HTTPException(status_code=404, detail="Blog not found")
+
+    # Create and save the new comment
+    new_comment = Comment(blog_id=blog_id, username=username, content=comment_content)
+    session.add(new_comment)
+    session.commit()
+    session.refresh(new_comment)
+
+    # Redirect back to the blog detail page after posting the comment
+    return RedirectResponse(url=f"/blogs/{blog_id}", status_code=303)
+
 
 
 @router.post("/blog/{blog_id}")
