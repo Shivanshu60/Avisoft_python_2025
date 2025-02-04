@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}Registration{% endblock %}
+
+{% block content %}
+    <h1 class="text-center">New User? Register Here</h1>
+    <form action="/registration" method="post">
+        <label for="username">Username:</label><br>
+        <input type="text" id="username" name="username" required><br><br>
+    
+        <label for="password">Password:</label><br>
+        <input type="password" id="password" name="password" required></textarea><br><br>
+        {% if request.query_params.get('error') %}
+        <p style="color: red;">{{ request.query_params.get('error') }}</p>
+    {% endif %}
+    
+        <button type="submit">Register</button>
+    </form>
+    
+{% endblock %}

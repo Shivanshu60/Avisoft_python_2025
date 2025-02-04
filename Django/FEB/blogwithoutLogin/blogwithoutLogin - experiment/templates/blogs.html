@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}All Blogs{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="text-center">All Blogs</h1>
+    <div class="blog-list">
+        {% for blog in blogs %}
+            <div class="blog-card">
+                <h2>{{ blog.title }}</h2>
+                <p>{{ blog.body }}</p>
+                <form  action="/blog/{{ blog.id }}" method="POST" >
+                    <button type="submit" class="btn-danger">Delete Blog</button>
+                </form>
+            </div>
+        {% else %}
+            <p class="text-center">No blogs available.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
