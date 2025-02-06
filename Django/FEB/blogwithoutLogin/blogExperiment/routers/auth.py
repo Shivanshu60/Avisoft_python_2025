@@ -1,61 +1,78 @@
-from fastapi import APIRouter, Request, Form, HTTPException, status, Depends
-from fastapi.responses import RedirectResponse, HTMLResponse
-from core.database import SessionDep
-from models.user import User
-from core.config import templates
+from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import select
+from model.models import *
+from core.database import SessionDep
+from schema.schemas import *
+from passlib.hash import bcrypt
+from jose import JWTError, jwt
+from datetime import datetime, timedelta, timezone
+from fastapi.security import OAuth2PasswordBearer
+
+router = APIRouter(prefix="/auth", tags=["Authentication"])
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login/")
+
+SECRET_KEY = "secretsanta404"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+# Function to create access token
+def create_access_token(data: dict, expires_delta: timedelta = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)):
+    to_encode = data.copy()
+    expire = datetime.now(timezone.utc) + expires_delta  # Using timezone.utc
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
 
 
-router = APIRouter()
-
-@router.get("/registration/", response_class=HTMLResponse)
-async def registration(request: Request):
-    return templates.TemplateResponse("register.html", {"request": request})
-
-@router.post("/registration/")
-async def registration(request: Request,session: SessionDep, username: str = Form(...), password: str = Form(...)):
-    existing_user = session.exec(select(User).where(User.username == username)).first()
-    
-    if existing_user:
-        return RedirectResponse(url="/registration?error=Username already exists", status_code=303)
-    
-
-    user = User(username=username, password=password)
-    session.add(user)
-    session.commit()
-
-    request.session["username"] = user.username
-
-    return RedirectResponse(url="/home", status_code=303)
-
-@router.get("/login/", response_class=HTMLResponse)
-async def login(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request})
+def get_current_user(token: str = Depends(oauth2_scheme), session: SessionDep = Depends(SessionDep)):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")  # 'sub' is the username
+        if username is None:
+            raise HTTPException(status_code=401, detail="Token is invalid")
+        
+        user = session.exec(select(User).where(User.username == username)).first()
+        if user is None:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        return user
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Token is invalid")
 
 @router.post("/login/")
-async def login(request: Request, session: SessionDep, username: str = Form(...), password: str = Form(...)):
-    statement = select(User).where(User.username == username)
-    user = session.exec(statement).first()
+def login(user: UserLogin, session: SessionDep):
+    # Fetch user from the database by username
+    db_user = session.exec(select(User).where(User.username == user.username)).first()
     
-    if not user:
-        return RedirectResponse(url="/login?error=User not found", status_code=303)
+    if db_user is None:
+        raise HTTPException(status_code=404, detail="User not found")
     
-    if user.password != password:
-        return RedirectResponse(url="/login?error=Incorrect password", status_code=303)
-
-    # Store username in session
-    request.session["username"] = user.username
+    # Verify password
+    if not bcrypt.verify(user.password, db_user.hashed_password):
+        raise HTTPException(status_code=401, detail="Incorrect password")
     
-    return RedirectResponse(url="/home", status_code=303)
-
-
-@router.get("/logout")
-async def logout(request: Request):
-    request.session.clear()  # Clear session data
-    return RedirectResponse(url="/home", status_code=303)
-
-
-
+    # Create access token
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(data={"sub": db_user.username}, expires_delta=access_token_expires)
     
+    return {"access_token": access_token, "token_type": "bearer"}
+
+
+
+
+@router.post("/register/")
+def register(user: UserCreate, session: SessionDep):
+    existing_user = session.exec(select(User).where(User.email == user.email)).first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+
+    hashed_password = bcrypt.hash(user.password)
+    new_user = User(username=user.username, email=user.email, hashed_password=hashed_password)
+    session.add(new_user)
+    session.commit()
+    session.refresh(new_user)
+    return {"message": "User registered successfully", "user": new_user}
+
 
 
