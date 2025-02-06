@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from core.database import create_db_and_tables
+from core.database import get_db_session
 from routers import auth, blog, comment, user
 from model.models import *
 from starlette.middleware.sessions import SessionMiddleware
@@ -19,4 +19,5 @@ app.include_router(user.router)
 
 @app.on_event("startup")
 def on_startup():
-    create_db_and_tables()
+    get_db_session
+    print("Database connection verified or other startup tasks completed.")

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import select
 from model.models import *
-from core.database import SessionDep
+from core.database import DBSession
 from schema.schemas import *
 from passlib.hash import bcrypt
 from jose import JWTError, jwt
@@ -10,7 +10,6 @@ from fastapi.security import OAuth2PasswordBearer
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login/")
 
 SECRET_KEY = "secretsanta404"
 ALGORITHM = "HS256"
@@ -25,23 +24,23 @@ def create_access_token(data: dict, expires_delta: timedelta = timedelta(minutes
     return encoded_jwt
 
 
-def get_current_user(token: str = Depends(oauth2_scheme), session: SessionDep = Depends(SessionDep)):
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")  # 'sub' is the username
-        if username is None:
-            raise HTTPException(status_code=401, detail="Token is invalid")
+# def get_current_user(token: str = Depends(oauth2_scheme), session: DBSession = Depends(DBSession)):
+#     try:
+#         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+#         username: str = payload.get("sub")  # 'sub' is the username
+#         if username is None:
+#             raise HTTPException(status_code=401, detail="Token is invalid")
         
-        user = session.exec(select(User).where(User.username == username)).first()
-        if user is None:
-            raise HTTPException(status_code=404, detail="User not found")
+#         user = session.exec(select(User).where(User.username == username)).first()
+#         if user is None:
+#             raise HTTPException(status_code=404, detail="User not found")
         
-        return user
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Token is invalid")
+#         return user
+#     except JWTError:
+#         raise HTTPException(status_code=401, detail="Token is invalid")
 
 @router.post("/login/")
-def login(user: UserLogin, session: SessionDep):
+def login(user: UserLogin, session: DBSession):
     # Fetch user from the database by username
     db_user = session.exec(select(User).where(User.username == user.username)).first()
     
@@ -62,7 +61,7 @@ def login(user: UserLogin, session: SessionDep):
 
 
 @router.post("/register/")
-def register(user: UserCreate, session: SessionDep):
+def register(user: UserCreate, session: DBSession):
     existing_user = session.exec(select(User).where(User.email == user.email)).first()
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
