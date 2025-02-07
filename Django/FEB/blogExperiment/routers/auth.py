@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import select
 from model.models import *
 from core.database import DBSession
@@ -6,28 +6,73 @@ from schema.schemas import UserLogin, UserCreate
 from passlib.hash import bcrypt
 from jose import JWTError, jwt
 from datetime import datetime, timedelta, timezone
-from fastapi.security import OAuth2PasswordBearer
-from service.userService import UserService
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from jose import JWTError, jwt
+from utils import *
+
+
+
+SECRET_KEY = "your-secret-key"
+ALGORITHM = "HS256"
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
+# Function to get current user from JWT token
+def get_current_user(token: str = Depends(oauth2_scheme)):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username: str = payload.get("sub")  # 'sub' is where the username is stored
+        if username is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Could not validate credentials",
+            )
+        return username
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+        )
+    
+
+
+
 @router.post("/login")
-def login (loginDetails: UserLogin, session :DBSession):
+def login_user(session :DBSession, form_data: OAuth2PasswordRequestForm = Depends()):
+    user = session.exec(select(User).where(User.username == form_data.username)).first()
+    verified_password = verify_password(form_data.password, user.hashed_password)
     try:
-        pass
-    except Exception as error:
-        print(error)
-        raise error
+        if not user or not verified_password:
+            raise HTTPException(
+                status_code = status.HTTP_401_UNAUTHORIZED,
+                detail = "Invalid username or password"
+            )
+    except Exception:
+        print("An error occured")
+    access_token = create_access_token(data={"sub": user.username})
+    return {"access_token": access_token,
+            "token_type": "bearer"}
 
 
-@router.post("/signup")
-def login (loginDetails: UserCreate, session :DBSession):
-    try:
-        pass
 
-    except Exception as error:
-        print(error)
-        raise error
+@router.post("/register/")
+def register_user(RegisterDetail: UserCreate, session :DBSession):
+    existing_user = session.exec(select(User).where(User.username == RegisterDetail.username)).first()
+
+    if existing_user:
+        raise HTTPException(
+            status_code = status.HTTP_400_BAD_REQUEST,
+            detail="Username already exists"
+        )
+    hashed_password = get_password_hash(RegisterDetail.password)
+    user = User(username = RegisterDetail.username, hashed_password=hashed_password)
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+    return {"message": "User registered Successfully"}
+
 
 
 

@@ -1,11 +1,11 @@
 <nav>
     <ul>
-        <li><a href="/home">Home</a></li>
-        <li><a href="/blogs">All Blogs</a></li>
+        <li><a href="/blogs/home">Home</a></li>
+        <li><a href="/blogs/all">All Blogs</a></li>
         
 
         {% if user_authenticated %}
-            <li><a href="/create-blog">Create Blog</a></li>  <!-- Show only if authenticated -->
+            <li><a href="/blogs/create-blog">Create Blog</a></li>  <!-- Show only if authenticated -->
             <hr>
             <li>Welcome, {{ username }}</li>
             <li><a href="/logout">Logout</a></li>
