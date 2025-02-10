@@ -7,7 +7,7 @@ from passlib.hash import bcrypt
 from jose import JWTError, jwt
 from datetime import datetime, timedelta, timezone
 from fastapi.security import OAuth2PasswordBearer
-from service.userService import UserService
+# from service.userService import UserService
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
