@@ -15,7 +15,14 @@ from mydjango.fastapi_app import app as fastapi_app  # Import your FastAPI app
 django_wsgi_app = get_wsgi_application()
 
 # Mount Django (WSGI app) under '/django'
-fastapi_app.mount("/", WSGIMiddleware(django_wsgi_app))
+fastapi_app.mount("/django", WSGIMiddleware(django_wsgi_app))
+
+
 
 # Expose the combined application as the ASGI callable
-application = fastapi_app
+app = fastapi_app
+
+from starlette.staticfiles import StaticFiles
+
+# After setting up Django and FastAPI...
+app.mount("/static", StaticFiles(directory="staticfiles"), name="static")
