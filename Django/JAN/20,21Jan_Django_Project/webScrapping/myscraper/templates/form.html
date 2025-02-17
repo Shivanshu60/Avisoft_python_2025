@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}Form Page{% endblock %}
+
+{% block content %}
+<h2>Enter link</h2>
+<form method="post">
+    {% csrf_token %}
+    <label for="url">Link:</label>
+    <input type="text" name="url" placeholder="Enter link" required>
+    <button type="submit">Submit</button>
+</form>
+
+{% if error %}
+<p style="color: red;">{{ error }}</p>
+{% endif %}
+
+{% if extracted_text %}
+<h3>Extracted Data:</h3>
+
+<!-- Display extracted text inside a textarea -->
+<textarea rows="50" style="width: 100%;" >
+{% for p in extracted_text %}
+{{ forloop.counter }}. {{ p }}
+
+{% endfor %}
+</textarea>
+
+{% endif %}
+{% endblock %}
