@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Create Project{% endblock %}
+
+{% block content %}
+  <h1>Create New Project for   <i>  {{category_name}} </i> </h1>
+  <form action="/create-project/" method="post">
+    <!-- id khud hi utha lega -->
+      <input type="hidden" name="category_id" value="{{ category_id }}">
+
+      <label for="name">Project Name:</label>
+      <input type="text" id="name" name="name" required><br><br>
+      <label for="start_date">Start Date:</label>
+      <input type="date" id="start_date" name="start_date" required><br><br>
+      <label for="end_date">End Date:</label>
+      <input type="date" id="end_date" name="end_date" required><br><br>
+      <label for="status">Status:</label>
+      <select id="status" name="status">
+        <option value="Pending">Pending</option>
+        <option value="In Progress">In Progress</option>
+        <option value="Completed">Completed</option>
+      </select><br><br>
+      <button type="submit">Create Project</button>
+  </form>
+{% endblock %}

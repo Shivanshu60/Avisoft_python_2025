@@ -3,26 +3,28 @@
 {% block title %}Categories Page{% endblock %}
 
 {% block content %}
-    <ul>
-        <button> <a href="/create-category/"> Add Category </a></button>
-        {% for category in categories %}
-            <li>
-                <a href="/view-category/{{ category.id }}"> {{ category.name }} (ID: {{ category.id }}) 
-                    {{ category.description }}
-    </a>
-                
-                <!-- Button Container for Edit and Delete buttons -->
-                <div class="button-container">
-                    
-                        <button ><a href="/update-category/{{ category.id }}"> Update </a></button>
-                    
+<ul>
+    <button> <a href="/create-category/"> Add Category </a></button>
+    {% for category in categories %}
+    <li>
+        <a href="/view-category/{{ category.id }}"> {{ category.name }} (ID: {{ category.id }})
+            {{ category.description }}
+        </a>
 
-                    <form action="/delete-category/{{ category.id }}" method="post">
-                        <button type="submit">Delete</button>
-                    </form>
-                </div>
-            </li>
-            <hr>
-        {% endfor %}
-    </ul>
+       
+
+        <!-- Button Container for Edit and Delete buttons -->
+        <div class="button-container">
+
+            <button><a href="/update-category/{{ category.id }}"> Update </a></button>
+
+
+            <form action="/delete-category/{{ category.id }}" method="post">
+                <button type="submit">Delete</button>
+            </form>
+        </div>
+    </li>
+    <hr>
+    {% endfor %}
+</ul>
 {% endblock %}

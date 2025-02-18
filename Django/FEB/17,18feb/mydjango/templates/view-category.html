@@ -7,7 +7,9 @@
   <p>{{ category.description }}</p>
 
   <!-- Create New Project Button -->
-  <a href="/create-project/?category_id={{ category.id }}" class="btn">Create New Project</a>
+  <button>
+      <a href="/create-project/?category_id={{ category.id }}" class="btn">Create New Project</a>
+  </button>
 
   <ul>
     {% for project in projects %}
@@ -15,11 +17,21 @@
         <strong>{{ project.name }}</strong><br>
         Start Date: {{ project.start_date }}<br>
         End Date: {{ project.end_date }}<br>
-        Status: {{ project.status }}
+        Status: {{ project.status }}<br>
+
+        <!-- Update Project Button -->
+        <a href="/edit-project/{{ project.id }}" class="btn btn-update">Edit</a>
+
+        <!-- Delete Project Form -->
+        <form action="/delete-project/{{ project.id }}?category_id={{ category.id }}" method="post">
+          <button type="submit" class="btn btn-delete">Delete</button>
+        </form>
       </li>
     {% else %}
       <li>No projects found for this category.</li>
     {% endfor %}
   </ul>
+
   <a href="/">Back to Categories</a>
+
 {% endblock %}

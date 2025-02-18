@@ -11,6 +11,7 @@ from fastapi.responses import RedirectResponse
 from asgiref.sync import sync_to_async
 from django.db import IntegrityError
 from django.core.exceptions import ObjectDoesNotExist
+from fastapi import Query
 
 templates = Jinja2Templates(directory=settings.TEMPLATES_DIR)
 
@@ -118,24 +119,6 @@ def view_category(request: Request, category_id: int):
     return templates.TemplateResponse("view-category.html", context)
 
 
-# create new project inside category 
-@app.get("/create-project/")
-def create_project(request: Request, category_id: int = None):
-    # You can use category_id to pre-populate or filter the form if needed.
-    return templates.TemplateResponse("create-project.html", {"request": request, "category_id": category_id})
-
-    
-
-
-
-
-
-
-
-
-
-
-
 # Delete a category by ID
 @app.delete("/categories/{category_id}")
 def delete_category(category_id: int):
@@ -146,23 +129,55 @@ def delete_category(category_id: int):
     category.delete()
     return {"message": "Category deleted successfully"}
 
-# Create Project
-@app.post("/projects/")
-def create_project(project_data: ProjectCreate):
-    category = get_object_or_404(ProjectCategory, id=project_data.category_id)
+##############################################################################################
+# create new project inside category 
+@app.get("/create-project/")
+def create_project(request: Request, category_id: int = None):
+    category = ProjectCategory.objects.get(id=category_id)
+    
+    return templates.TemplateResponse("create-project.html", {"request": request, "category_id": category_id, "category_name": category.name})
 
-    project = Project.objects.create(
-        name=project_data.name,
-        category=category,
-        # start_date=project_data.start_date,
-        # end_date=project_data.end_date,
-        # status=project_data.status
-    )
-    return {"message": "Project created successfully", "project_id": project.id}
+    
+@app.post("/create-project/")
+def save_project(
+    category_id: int = Form(...),
+    name: str = Form(...),
+    start_date: str = Form(...),
+    end_date: str = Form(...),
+    status: str = Form(...),
+):
+    try:
+        category = ProjectCategory.objects.get(id=category_id)
+        new_project = Project.objects.create(
+            category=category,
+            name=name,
+            start_date=start_date,
+            end_date=end_date,
+            status=status,
+        )
+        return RedirectResponse(url=f"/view-category/{category_id}", status_code=303)
+    except ObjectDoesNotExist:
+        return {"error": "Category not found"}
 
-# Delete Project
-@app.delete("/projects/{project_id}")
-def delete_project(project_id: int):
-    project = get_object_or_404(Project, id=project_id)
-    project.delete()
-    return {"message": "Project deleted successfully"}
+
+@app.get("/edit-project/{project_id}")
+def edit_project(request: Request, project_id: int):
+    try:
+        project = Project.objects.get(id=project_id)
+        return templates.TemplateResponse("edit-project.html", {"request": request, "project": project})
+    except Project.DoesNotExist:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+@app.post("/delete-project/{project_id}")
+def delete_project(project_id: int, category_id: int = Query(...)):
+    try:
+        project = Project.objects.get(id=project_id)
+        project.delete()
+        return RedirectResponse(url="/view-category/{category_id}/", status_code=303)
+    except Project.DoesNotExist:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+
+
+
+
