@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}{{ category.name }} - Projects{% endblock %}
+
+{% block content %}
+  <h1>Projects for Category: {{ category.name }}</h1>
+  <p>{{ category.description }}</p>
+
+  <!-- Create New Project Button -->
+  <a href="/create-project/?category_id={{ category.id }}" class="btn">Create New Project</a>
+
+  <ul>
+    {% for project in projects %}
+      <li>
+        <strong>{{ project.name }}</strong><br>
+        Start Date: {{ project.start_date }}<br>
+        End Date: {{ project.end_date }}<br>
+        Status: {{ project.status }}
+      </li>
+    {% else %}
+      <li>No projects found for this category.</li>
+    {% endfor %}
+  </ul>
+  <a href="/">Back to Categories</a>
+{% endblock %}

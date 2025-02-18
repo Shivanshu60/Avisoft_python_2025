@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title}}{% endblock %}
+
+{% block content %}
+    <h1>{{ title}}</h1>
+
+    <form action="/update-category/{{ category.id }}" method="post">
+        <label for="name">Category Name:</label>
+        <input type="text" id="name" name="name" value="{{ category.name }}" required><br><br>
+
+        <label for="description">Category Description:</label>
+        <textarea id="description" name="description" rows="4" required>{{ category.description }}</textarea><br><br>
+
+        <button type="submit">Save Changes</button>
+    </form>
+{% endblock %}
