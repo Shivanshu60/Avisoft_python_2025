@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Task for Project: {{ project.name }}{% endblock %}
+
+{% block content %}
+  <h1>Edit Task Assignment for Project: {{ project.name }}</h1>
+  <form action="/edit-task/{{ category.id }}/{{ project.id }}/{{ task.id }}" method="post">
+    <label for="employee_name">Employee Name:</label>
+    <input type="text" id="employee_name" name="employee_name" value="{{ task.employee_name }}" required><br><br>
+    
+    <label for="task_description">Task Description:</label>
+    <textarea id="task_description" name="task_description" required>{{ task.task_description }}</textarea><br><br>
+    
+    <label for="is_completed">Task Completed?</label>
+    <input type="checkbox" id="is_completed" name="is_completed" {% if task.is_completed %}checked{% endif %}><br><br>
+    
+    <button type="submit">Update Task</button>
+  </form>
+  
+  <a href="/view-project/{{ category.id }}/{{ project.id }}">Back to Project</a>
+{% endblock %}

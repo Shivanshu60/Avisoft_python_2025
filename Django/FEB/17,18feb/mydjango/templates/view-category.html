@@ -14,10 +14,15 @@
   <ul>
     {% for project in projects %}
       <li>
-        <strong>{{ project.name }}</strong><br>
-        Start Date: {{ project.start_date }}<br>
-        End Date: {{ project.end_date }}<br>
-        Status: {{ project.status }}<br>
+        
+        <a href="/view-project/{{ category.id }}/{{ project.id }}">
+          
+          <strong>{{ project.name }}</strong><br>
+          Start Date: {{ project.start_date }}<br>
+          End Date: {{ project.end_date }}<br>
+          Status: {{ project.status }}<br>
+
+        </a>
 
         <!-- Container for Edit and Delete buttons -->
          <br>

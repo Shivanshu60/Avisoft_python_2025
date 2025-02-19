@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}View Project: {{ project.name }}{% endblock %}
+
+{% block content %}
+  <h1>Category: {{ category.name }} <br> Project: {{ project.name }}</h1>
+
+  <b>Project Description:</b>
+  <p>Start Date: {{ project.start_date }}</p>
+  <p>End Date: {{ project.end_date }}</p>
+  <p>Status: {{ project.status }}</p>
+  
+  <h2>Employee Task Assignments</h2>
+  <button>
+    <a href="/add-task/{{ category.id }}/{{ project.id }}">Add Task</a>
+  </button>
+  <ul>
+    {% for task in tasks %}
+      <li>
+        <strong>{{ task.employee_name }}</strong>: {{ task.task_description }} -
+        {% if task.is_completed %}
+          <span style="color: green;">Completed</span>
+        {% else %}
+          <span style="color: red;">Pending</span>
+        {% endif %}
+        
+        <!-- Edit Task Button (GET request) -->
+        <button>
+          <a href="/edit-task/{{ category.id }}/{{ project.id }}/{{ task.id }}">Edit</a>
+        </button>
+        
+        <!-- Delete Task Form (POST request) -->
+        <form action="/delete-task/{{ category.id }}/{{ project.id }}/{{ task.id }}" method="post" style="display: inline;">
+          <button type="submit">Delete</button>
+        </form>
+        <hr>
+      </li>
+    {% else %}
+      <li>No tasks assigned to this project yet.</li>
+    {% endfor %}
+  </ul>
+  
+  <a href="/view-category/{{ project.category.id }}">Back to Projects</a>
+{% endblock %}

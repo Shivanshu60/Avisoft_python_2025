@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends, Request
 from pydantic import BaseModel
-from app.models import Project, ProjectCategory  
+from app.models import Project, ProjectCategory, TaskAssignment 
 from django.db.utils import IntegrityError
 from fastapi import FastAPI
 from django.shortcuts import get_object_or_404
@@ -210,8 +210,123 @@ def delete_project(category_id: int, project_id: int):
     except Project.DoesNotExist:
         raise HTTPException(status_code=404, detail="Project not found")
 
+#####################################################################
+# EMPLOYEE TASK PART
+
+@app.get("/view-project/{category_id}/{project_id}")
+def view_project(request: Request, category_id: int, project_id: int):
+    try:
+        # Ensure that the project belongs to the specified category
+        project = Project.objects.get(id=project_id, category__id=category_id)
+        category = project.category  # Extract the category from the project
+    except Project.DoesNotExist:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    # Get all task assignments for this project (assuming the related_name is "task_assignments")
+    tasks = project.task_assignments.all()
+    
+    # Render the template with the project, its tasks, and its category
+    return templates.TemplateResponse("view-project.html", {
+        "request": request,
+        "project": project,
+        "tasks": tasks,
+        "category": category
+    })
 
 
+@app.get("/add-task/{category_id}/{project_id}")
+def add_task_form(request: Request, category_id: int, project_id: int):
+    try:
+        project = Project.objects.get(id=project_id, category__id=category_id)
+    except Project.DoesNotExist:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    # Render a template that shows a form for adding a new task assignment
+    return templates.TemplateResponse("add-task.html", {
+        "request": request,
+        "project": project,
+        "category": project.category
+    })
 
 
+@app.post("/add-task/{category_id}/{project_id}")
+def create_task(
+    category_id: int,
+    project_id: int,
+    employee_name: str = Form(...),
+    task_description: str = Form(...),
+    is_completed: bool = Form(False)  # Checkbox returns False if not checked
+):
+    try:
+        project = Project.objects.get(id=project_id, category__id=category_id)
+    except Project.DoesNotExist:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    # Create the task assignment
+    TaskAssignment.objects.create(
+        project=project,
+        employee_name=employee_name,
+        task_description=task_description,
+        is_completed=is_completed
+    )
+    
+    # Redirect back to the project view page
+    return RedirectResponse(url=f"/view-project/{category_id}/{project_id}", status_code=303)
 
+
+@app.get("/edit-task/{category_id}/{project_id}/{task_id}")
+def edit_task_form(request: Request, category_id: int, project_id: int, task_id: int):
+    try:
+        # Ensure the project exists and belongs to the given category
+        project = Project.objects.get(id=project_id, category__id=category_id)
+        # Ensure the task belongs to this project
+        task = TaskAssignment.objects.get(id=task_id, project=project)
+    except (Project.DoesNotExist, TaskAssignment.DoesNotExist):
+        raise HTTPException(status_code=404, detail="Project or Task not found")
+    
+    # Render the template with the current task data
+    return templates.TemplateResponse("edit-task.html", {
+        "request": request,
+        "project": project,
+        "category": project.category,
+        "task": task
+    })
+
+@app.post("/edit-task/{category_id}/{project_id}/{task_id}")
+def update_task(
+    category_id: int,
+    project_id: int,
+    task_id: int,
+    employee_name: str = Form(...),
+    task_description: str = Form(...),
+    is_completed: bool = Form(False)  # Checkbox returns False if not checked
+):
+    try:
+        project = Project.objects.get(id=project_id, category__id=category_id)
+        task = TaskAssignment.objects.get(id=task_id, project=project)
+    except (Project.DoesNotExist, TaskAssignment.DoesNotExist):
+        raise HTTPException(status_code=404, detail="Project or Task not found")
+    
+    # Update the task assignment
+    task.employee_name = employee_name
+    task.task_description = task_description
+    task.is_completed = is_completed
+    task.save()
+    
+    # Redirect back to the project view page
+    return RedirectResponse(url=f"/view-project/{category_id}/{project_id}", status_code=303)
+
+
+@app.post("/delete-task/{category_id}/{project_id}/{task_id}")
+def delete_task(category_id: int, project_id: int, task_id: int):
+    try:
+        project = Project.objects.get(id=project_id, category__id=category_id)
+        task = TaskAssignment.objects.get(id=task_id, project=project)
+    except (Project.DoesNotExist, TaskAssignment.DoesNotExist):
+        raise HTTPException(status_code=404, detail="Project or Task not found")
+    
+    # Delete the task assignment
+    task.delete()
+    
+    # Redirect back to the project view page
+    return RedirectResponse(url=f"/view-project/{category_id}/{project_id}", status_code=303)
