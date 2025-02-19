@@ -25,4 +25,4 @@ app = fastapi_app
 from starlette.staticfiles import StaticFiles
 
 # After setting up Django and FastAPI...
-app.mount("/static", StaticFiles(directory="staticfiles"), name="static")
+app.mount("/static", StaticFiles(directory="static"), name="static")
