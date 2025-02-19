@@ -138,9 +138,9 @@ def create_project(request: Request, category_id: int = None):
     return templates.TemplateResponse("create-project.html", {"request": request, "category_id": category_id, "category_name": category.name})
 
     
-@app.post("/create-project/")
+@app.post("/create-project/{category_id}")
 def save_project(
-    category_id: int = Form(...),
+    category_id: int,
     name: str = Form(...),
     start_date: str = Form(...),
     end_date: str = Form(...),
@@ -160,22 +160,56 @@ def save_project(
         return {"error": "Category not found"}
 
 
-@app.get("/edit-project/{project_id}")
-def edit_project(request: Request, project_id: int):
+
+@app.get("/edit-project/{category_id}/{project_id}")
+def edit_project(request: Request, category_id: int, project_id: int):
     try:
         project = Project.objects.get(id=project_id)
-        return templates.TemplateResponse("edit-project.html", {"request": request, "project": project})
+        return templates.TemplateResponse(
+            "edit-project.html",
+            {
+                "request": request,
+                "project": project,
+                "category_id": category_id  # Pass category_id to the template if needed
+            }
+        )
     except Project.DoesNotExist:
         raise HTTPException(status_code=404, detail="Project not found")
 
-@app.post("/delete-project/{project_id}")
-def delete_project(project_id: int, category_id: int = Query(...)):
+
+@app.post("/edit-project/{category_id}/{project_id}")
+def update_project(
+    category_id: int,
+    project_id: int,
+    name: str = Form(...),
+    start_date: str = Form(...),
+    end_date: str = Form(...),
+    status: str = Form(...),
+):
     try:
         project = Project.objects.get(id=project_id)
-        project.delete()
-        return RedirectResponse(url="/view-category/{category_id}/", status_code=303)
+        # Update the project with the new data
+        project.name = name
+        project.start_date = start_date
+        project.end_date = end_date
+        project.status = status
+        project.save()
+        # Redirect back to the category page using the category_id from the URL
+        return RedirectResponse(url=f"/view-category/{category_id}", status_code=303)
     except Project.DoesNotExist:
         raise HTTPException(status_code=404, detail="Project not found")
+
+
+@app.post("/delete-project/{category_id}/{project_id}")
+def delete_project(category_id: int, project_id: int):
+    try:
+
+        project = Project.objects.get(id=project_id)
+        project.delete()
+        return RedirectResponse(url=f"/view-category/{category_id}", status_code=303)
+    except Project.DoesNotExist:
+        raise HTTPException(status_code=404, detail="Project not found")
+
 
 
 

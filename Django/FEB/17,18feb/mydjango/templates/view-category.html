@@ -4,11 +4,11 @@
 
 {% block content %}
   <h1>Projects for Category: {{ category.name }}</h1>
-  <p>{{ category.description }}</p>
+  <p>Description: {{ category.description }}</p>
 
   <!-- Create New Project Button -->
   <button>
-      <a href="/create-project/?category_id={{ category.id }}" class="btn">Create New Project</a>
+    <a href="/create-project/?category_id={{ category.id }}" class="btn">Create New Project</a>
   </button>
 
   <ul>
@@ -19,13 +19,20 @@
         End Date: {{ project.end_date }}<br>
         Status: {{ project.status }}<br>
 
-        <!-- Update Project Button -->
-        <a href="/edit-project/{{ project.id }}" class="btn btn-update">Edit</a>
+        <!-- Container for Edit and Delete buttons -->
+         <br>
+        <div style="display: inline-flex; gap: 20px; align-items: center;">
+          <!-- Update Project Button -->
+          <button>
+            <a href="/edit-project/{{ category.id }}/{{ project.id }}" class="btn btn-update">Edit</a>
+          </button>
 
-        <!-- Delete Project Form -->
-        <form action="/delete-project/{{ project.id }}?category_id={{ category.id }}" method="post">
-          <button type="submit" class="btn btn-delete">Delete</button>
-        </form>
+          <!-- Delete Project Form -->
+          <form action="/delete-project/{{ category.id }}/{{ project.id }}" method="post" style="display: inline;">
+            <button type="submit">Delete Project</button>
+          </form>
+        </div>
+        <hr>
       </li>
     {% else %}
       <li>No projects found for this category.</li>
@@ -33,5 +40,4 @@
   </ul>
 
   <a href="/">Back to Categories</a>
-
 {% endblock %}

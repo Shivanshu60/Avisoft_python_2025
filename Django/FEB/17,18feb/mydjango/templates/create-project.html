@@ -3,10 +3,9 @@
 {% block title %}Create Project{% endblock %}
 
 {% block content %}
-  <h1>Create New Project for   <i>  {{category_name}} </i> </h1>
-  <form action="/create-project/" method="post">
-    <!-- id khud hi utha lega -->
-      <input type="hidden" name="category_id" value="{{ category_id }}">
+  <h1>Create New Project : {{category_name}}  </h1>
+  <form action="/create-project/{{ category_id }}" method="post">
+
 
       <label for="name">Project Name:</label>
       <input type="text" id="name" name="name" required><br><br>
