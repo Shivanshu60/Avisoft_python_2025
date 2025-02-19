@@ -17,14 +17,15 @@ templates = Jinja2Templates(directory=settings.TEMPLATES_DIR)
 
 app = FastAPI()
 
+#########################################################################################
+#Schemas
 
-
-# Request model for category
+#for category
 class CategoryCreate(BaseModel):
     name: str
     description: str
 
-# Pydantic model for Project input
+#  for Project input
 class ProjectCreate(BaseModel):
     name: str
     category_id: int
@@ -32,8 +33,13 @@ class ProjectCreate(BaseModel):
     # end_date: str = None
     # status: str = "Pending"
 
+##########################################################################################
+# APIS
+#for category
+
+
 # Get all categories
-@app.get("/")
+@app.get("/",  tags=["Category"])
 def get_categories(request: Request):
     categories = ProjectCategory.objects.all()
     context = {
@@ -44,10 +50,10 @@ def get_categories(request: Request):
     return templates.TemplateResponse("index.html", context)
 
 # to create category
-@app.post("/create-category/")
+@app.post("/create-category/", tags=["Category"])
 async def create_category_post(name: str = Form(...), description: str = Form(...)):
     try:
-        # Create instance without saving
+        # Create instance new
         new_category = ProjectCategory(name=name, description=description)
         
         # Async save with validation
@@ -57,12 +63,12 @@ async def create_category_post(name: str = Form(...), description: str = Form(..
     except IntegrityError:
         raise HTTPException(status_code=400, detail="Category already exists")
 
-@app.get("/create-category/")
+@app.get("/create-category/", tags=["Category"])
 def create_category(request: Request):
     return templates.TemplateResponse("create-category.html", {"request": request})
 
 # to update the details of a category 
-@app.get("/update-category/{category_id}")
+@app.get("/update-category/{category_id}", tags=["Category"])
 def edit_category(request: Request, category_id: int):
     try:
         category = ProjectCategory.objects.get(id=category_id)
@@ -74,7 +80,7 @@ def edit_category(request: Request, category_id: int):
         raise HTTPException(status_code=404, detail="Category not found EDIT")
     
 
-@app.post("/update-category/{category_id}")
+@app.post("/update-category/{category_id}", tags=["Category"])
 def update_category(category_id: int, name: str = Form(...), description: str = Form(...)):
     print(f"Received form data - name: {name}, description: {description}")
     try:
@@ -89,7 +95,7 @@ def update_category(category_id: int, name: str = Form(...), description: str = 
 
 
 # to delete a category 
-@app.post("/delete-category/{category_id}")
+@app.post("/delete-category/{category_id}", tags=["Category"])
 def delete_category(category_id: int):
     try:
         category = ProjectCategory.objects.get(id=category_id)
@@ -99,7 +105,7 @@ def delete_category(category_id: int):
         raise HTTPException(status_code=404, detail="Category not found")
 
 
-@app.get("/view-category/{category_id}")
+@app.get("/view-category/{category_id}", tags=["Category"])
 def view_category(request: Request, category_id: int):
     try:
         # Get the category using the Django ORM
@@ -120,7 +126,7 @@ def view_category(request: Request, category_id: int):
 
 
 # Delete a category by ID
-@app.delete("/categories/{category_id}")
+@app.post("/categories/{category_id}", tags=["Category"])
 def delete_category(category_id: int):
     category = ProjectCategory.objects.filter(id=category_id).first()
     if not category:
@@ -130,15 +136,16 @@ def delete_category(category_id: int):
     return {"message": "Category deleted successfully"}
 
 ##############################################################################################
-# create new project inside category 
-@app.get("/create-project/")
+# PROJECT related apis
+
+@app.get("/create-project/", tags=["Project"])
 def create_project(request: Request, category_id: int = None):
     category = ProjectCategory.objects.get(id=category_id)
     
     return templates.TemplateResponse("create-project.html", {"request": request, "category_id": category_id, "category_name": category.name})
 
     
-@app.post("/create-project/{category_id}")
+@app.post("/create-project/{category_id}", tags=["Project"])
 def save_project(
     category_id: int,
     name: str = Form(...),
@@ -161,7 +168,7 @@ def save_project(
 
 
 
-@app.get("/edit-project/{category_id}/{project_id}")
+@app.get("/edit-project/{category_id}/{project_id}", tags=["Project"])
 def edit_project(request: Request, category_id: int, project_id: int):
     try:
         project = Project.objects.get(id=project_id)
@@ -177,7 +184,7 @@ def edit_project(request: Request, category_id: int, project_id: int):
         raise HTTPException(status_code=404, detail="Project not found")
 
 
-@app.post("/edit-project/{category_id}/{project_id}")
+@app.post("/edit-project/{category_id}/{project_id}", tags=["Project"])
 def update_project(
     category_id: int,
     project_id: int,
@@ -200,7 +207,7 @@ def update_project(
         raise HTTPException(status_code=404, detail="Project not found")
 
 
-@app.post("/delete-project/{category_id}/{project_id}")
+@app.post("/delete-project/{category_id}/{project_id}", tags=["Project"])
 def delete_project(category_id: int, project_id: int):
     try:
 
@@ -210,10 +217,9 @@ def delete_project(category_id: int, project_id: int):
     except Project.DoesNotExist:
         raise HTTPException(status_code=404, detail="Project not found")
 
-#####################################################################
-# EMPLOYEE TASK PART
 
-@app.get("/view-project/{category_id}/{project_id}")
+
+@app.get("/view-project/{category_id}/{project_id}", tags=["Project"])
 def view_project(request: Request, category_id: int, project_id: int):
     try:
         # Ensure that the project belongs to the specified category
@@ -234,7 +240,10 @@ def view_project(request: Request, category_id: int, project_id: int):
     })
 
 
-@app.get("/add-task/{category_id}/{project_id}")
+#####################################################################
+# EMPLOYEE/TASK PART
+
+@app.get("/add-task/{category_id}/{project_id}", tags=["Employee Task"])
 def add_task_form(request: Request, category_id: int, project_id: int):
     try:
         project = Project.objects.get(id=project_id, category__id=category_id)
@@ -249,7 +258,7 @@ def add_task_form(request: Request, category_id: int, project_id: int):
     })
 
 
-@app.post("/add-task/{category_id}/{project_id}")
+@app.post("/add-task/{category_id}/{project_id}", tags=["Employee Task"])
 def create_task(
     category_id: int,
     project_id: int,
@@ -274,7 +283,7 @@ def create_task(
     return RedirectResponse(url=f"/view-project/{category_id}/{project_id}", status_code=303)
 
 
-@app.get("/edit-task/{category_id}/{project_id}/{task_id}")
+@app.get("/edit-task/{category_id}/{project_id}/{task_id}", tags=["Employee Task"])
 def edit_task_form(request: Request, category_id: int, project_id: int, task_id: int):
     try:
         # Ensure the project exists and belongs to the given category
@@ -292,7 +301,7 @@ def edit_task_form(request: Request, category_id: int, project_id: int, task_id:
         "task": task
     })
 
-@app.post("/edit-task/{category_id}/{project_id}/{task_id}")
+@app.post("/edit-task/{category_id}/{project_id}/{task_id}", tags=["Employee Task"])
 def update_task(
     category_id: int,
     project_id: int,
@@ -317,7 +326,7 @@ def update_task(
     return RedirectResponse(url=f"/view-project/{category_id}/{project_id}", status_code=303)
 
 
-@app.post("/delete-task/{category_id}/{project_id}/{task_id}")
+@app.post("/delete-task/{category_id}/{project_id}/{task_id}", tags=["Employee Task"])
 def delete_task(category_id: int, project_id: int, task_id: int):
     try:
         project = Project.objects.get(id=project_id, category__id=category_id)
