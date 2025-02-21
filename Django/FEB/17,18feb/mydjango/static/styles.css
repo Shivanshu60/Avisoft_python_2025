@@ -12,3 +12,22 @@
 button:hover {
   cursor: pointer;
 }
+
+nav{
+  border: 1px solid grey;
+}
+
+li {
+  background-color: #e4e4e4; /* Change to any color you prefer */
+
+
+}
+li > a{
+  background-color: #e4e4e4;
+}
+
+footer{
+  background-color: #e4e4e4;
+  border: 1px solid grey;
+}
+
