@@ -31,3 +31,8 @@ footer{
   border: 1px solid grey;
 }
 
+main{
+  border: 2px solid grey;
+  padding: 20px;
+
+}
